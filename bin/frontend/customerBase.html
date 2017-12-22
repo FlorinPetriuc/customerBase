@@ -1,0 +1,427 @@
+<!doctype html>
+<html style="width:100%;height:100%;">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+</head>
+<body id="body" style="width:100%;height:100%;background-color:#000000">
+</button>
+<div id="customersPage">
+<table class="table table-dark">
+    <thead>
+    <tr>
+        <th scope="col"><div style="cursor:pointer;" onclick="sortByName();">Name</div></th>
+        <th scope="col"><div style="cursor:pointer;" onclick="sortByStatus();">Status</div>
+            <div class="checkbox">
+                <label><input type="checkbox" value="" checked="checked" id="prospectiveCHK" onclick="populateCustomers();"> Show prospective</label>
+            </div>
+            <div class="checkbox">
+                <label><input type="checkbox" value="" checked="checked" id="activeCHK" onclick="populateCustomers();"> Show active</label>
+            </div>
+            <div class="checkbox">
+                <label><input type="checkbox" value="" checked="checked" id="nonActiveCHK" onclick="populateCustomers();"> Show non-active</label>
+            </div></th>
+        <th scope="col"><div style="cursor:pointer;" onclick="sortByDate();">Created</div></th>
+        <th scope="col">Notes</th>
+    </tr>
+    </thead>
+    <tbody id="customersTable">
+    </tbody>
+</table>
+<div style="position: fixed;bottom: 5px;right:5px;z-index: 99;">
+<button class="btn btn-primary" onclick="getCustomers();">
+    Refresh
+</button>
+<button class="btn btn-primary" onclick="showAddCustomer();">
+    Add Customer
+</button>
+</div>
+</div>
+<div id="addCustomerPage" style="display:none;">
+    <div class="form-group">
+    <label for="nameAdd" style="color:#fff">Name:</label>
+    <input type="nameAdd" class="form-control" id="nameAdd">
+    </div>
+    <div class="form-group">
+    <label for="detailsAdd" style="color:#fff">Details:</label>
+    <input type="detailsAdd" class="form-control" id="detailsAdd">
+    </div>
+    <div class="form-group">
+    <label for="customerTypeAdd" style="color:#fff">Type:</label>
+    <select type="customerTypeAdd" class="form-control" id="customerTypeAdd">
+    <option value='0'>Prospective</option>
+    <option value='1'>Active</option>;
+    <option value='2'>Non-active</option>   ;
+    </select>
+    </div>
+    <center>
+    <button class="btn btn-primary" onclick="saveCustomer(customerTypeAdd.value, nameAdd.value, detailsAdd.value);">
+        Save
+    </button>
+    <button class="btn btn-primary" onclick="showCustomerPage();">
+        Cancel
+    </button>
+</center>
+</div>
+<div id="notesPage" style="display:none;">
+<center>
+<button type="button" class="btn btn-primary" id="customerDetails">
+</button>
+</center>
+<table class="table table-dark">
+    <thead>
+    <tr>
+        <th scope="col"><div>Note</div></th>
+        <th scope="col"><div>Modified</div></th>
+        <th scope="col"><div></div></th>
+    </tr>
+    </thead>
+    <tbody id="notesTable">
+    </tbody>
+</table>
+<button class="btn btn-primary" onclick="showCustomerPage();">
+    Back
+</button>
+</div>
+<div style="position: fixed;bottom: 5px;visibility:hidden;">
+<div class="alert alert-success float-right" style="z-index: 50;" id="successPopupMsg">
+</div>
+</div>
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+<script type="text/javascript">
+var URL = "http://localhost:4080/";
+var customers = [];
+var notes = [];
+var sortNameAscending = true;
+var sortStatusAscending = true;
+var sortDateAscending = true;
+
+function updateNote(id, text, idx)
+{
+    doPost(URL + "changeNote", {'id': id, 'note': text}, function(json)
+    {
+        if(!json.success)
+        {
+            alert("An error has occured. Please try again later. If the problem persists," +
+                  " please contact your network administrator");
+
+            return;
+        }
+
+        notes[idx].modified = json.modified;
+        notes[idx].note = text;
+
+        successMessage("The note has been updated");
+    });
+}
+
+function addNote(text, cID)
+{
+    doPost(URL + "addNote", {'cID': cID, 'note': text}, function(json)
+    {
+        if(!json.success)
+        {
+            alert("An error has occured. Please try again later. If the problem persists," +
+                  " please contact your network administrator");
+
+            return;
+        }
+
+        notes.push({'id': json.id, 'note': text, 'modified': json.created});
+
+        populateNotes(cID);
+    });
+}
+
+function populateNotes(cID)
+{
+    document.getElementById('notesTable').innerHTML = "";
+
+    for(var i = 0; i < notes.length; ++i)
+    {
+        var d = new Date(notes[i].modified * 1000);
+
+        document.getElementById('notesTable').innerHTML += "<tr><td><textarea class='form-control' rows='3' id='note" + notes[i].id + "'>" + notes[i].note + "</textarea></td><td>" +
+                d.toLocaleString() + "</td><td><button class='btn btn-primary' onclick='updateNote(" + notes[i].id + ", note" + notes[i].id + ".value, " + i + ");'>Update</button></td></tr>";
+    }
+
+    document.getElementById('notesTable').innerHTML += "<tr><td><textarea class='form-control' rows='3' id='newNote'></textarea></td><td>" +
+                                                    "<button class='btn btn-primary' onclick='addNote(newNote.value, " + cID + ");'>Add</button></td><td></td></tr>";
+}
+
+function getNotes(id)
+{
+    doPost(URL + "viewNotes", {'cID': id}, function(json)
+    {
+        if(!('notes' in json))
+        {
+            notes = [];
+        }
+        else
+        {
+            notes = json.notes;
+        }
+        
+        populateNotes(id);
+    });
+}
+
+function showNotesPage(id, details, name)
+{
+    document.getElementById('customerDetails').innerHTML = "Details and notes for " + name + ": " + details;
+
+    document.getElementById('notesPage').style.display = "block";
+    document.getElementById('customersPage').style.display = "none";
+    document.getElementById('addCustomerPage').style.display = "none";
+
+    getNotes(id);
+}
+
+function saveCustomer(cType, name, details)
+{
+    doPost(URL + "addCustomer", {'cType': cType, 'name': name, 'details': details}, function(json)
+    {
+        if(!json.success)
+        {
+            alert("An error has occured. Please try again later. If the problem persists," +
+                  " please contact your network administrator");
+
+            return;
+        }
+
+        var newCID = json.id;
+        var customerCreatedDate = json.created;
+
+        document.getElementById('nameAdd').value = "";
+        document.getElementById('detailsAdd').value = "";
+        document.getElementById('customerTypeAdd').selectedIndex = 0;
+
+        customers.push({'id': newCID, 'name': name, 'details': details, 'created': customerCreatedDate, 'type': cType});
+
+        successMessage("A new user has been created");
+    });
+}
+
+function showCustomerPage()
+{
+    document.getElementById('notesPage').style.display = "none";
+    document.getElementById('addCustomerPage').style.display = "none";
+    document.getElementById('customersPage').style.display = "block";
+
+    populateCustomers();
+}
+
+function showAddCustomer()
+{
+    document.getElementById('notesPage').style.display = "none";
+    document.getElementById('customersPage').style.display = "none";
+    document.getElementById('addCustomerPage').style.display = "block";
+}
+
+function sortByName()
+{
+    customers.sort(function(a, b)
+    {
+        if(sortNameAscending)
+        {
+            return a.name >= b.name;
+        }
+        else
+        {
+            return b.name >= b.name;
+        }
+    });
+
+    sortNameAscending = !sortNameAscending;
+
+    populateCustomers();
+}
+
+function sortByStatus()
+{
+    customers.sort(function(a, b)
+    {
+        if(sortStatusAscending)
+        {
+            return a.type >= b.type;
+        }
+        else
+        {
+            return b.type >= b.type;
+        }
+    });
+
+    sortStatusAscending = !sortStatusAscending;
+
+    populateCustomers();
+}
+
+function sortByDate()
+{
+    customers.sort(function(a, b)
+    {
+        if(sortDateAscending)
+        {
+            return a.created >= b.created;
+        }
+        else
+        {
+            return b.created >= b.created;
+        }
+    });
+
+    sortDateAscending = !sortDateAscending;
+
+    populateCustomers();
+}
+
+function successMessage(msg)
+{
+    document.getElementById('successPopupMsg').innerHTML = "<strong>Success!</strong> " + msg;
+    document.getElementById('successPopupMsg').style.visibility = "visible";
+
+    setTimeout(function()
+    {
+        document.getElementById('successPopupMsg').style.visibility = "hidden";
+    }, 1500);
+}
+
+function doPost(url, body, callback)
+{
+    var req = new XMLHttpRequest();
+
+    req.open('POST', url);
+    req.onerror = function()
+    {
+        alert("An error has occured. Please try again later. If the problem persists," +
+                  " please contact your network administrator");
+    };
+    req.onreadystatechange = function()
+    {
+        if(req.readyState != 4)
+        {
+            return;
+        }
+
+        if(req.status != 200)
+        {
+            alert("An error has occured. Please try again later. If the problem persists," +
+                  " please contact your network administrator");
+
+            return null;
+        }
+
+        callback(JSON.parse(req.response));
+    };
+
+    if(body == null)
+    {
+        req.send(null);
+    }
+    else
+    {
+        req.send(JSON.stringify(body));
+    }
+}
+
+function generateCustomerStatusSelect(status, id, idx)
+{
+    var ret;
+
+    ret = "<select class='dropdown' onchange='changeCustomerStatus(" + id + ", this.value, " + idx + ");'>";
+
+    ret += "<option" + ((status == 0) ? " selected" : "") + " value='0'>Prospective</option>";
+    ret += "<option" + ((status == 1) ? " selected" : "") + " value='1'>Active</option>";
+    ret += "<option" + ((status == 2) ? " selected" : "") + " value='2'>Non-active</option>";
+
+    ret += "</select>";
+
+    return ret;
+}
+
+function changeCustomerStatus(id, status, idx)
+{
+    doPost(URL + "changeCustomerStatus", {'cType': status, 'id': id}, function(json)
+    {
+        if(!json.success)
+        {
+            alert("An error has occured. Please try again later. If the problem persists," +
+                  " please contact your network administrator");
+
+            return;
+        }
+
+        customers[idx].type = status;
+
+        successMessage("Customer status has been updated");
+    });
+}
+
+function getCustomers()
+{
+    doPost(URL + "viewCustomers", null, function(json)
+    {
+        if(!('customers' in json))
+        {
+            customers = [];
+        }
+        else
+        {
+            customers = json.customers;
+        }
+        populateCustomers();
+    });
+}
+
+function populateCustomers()
+{
+    document.getElementById('customersTable').innerHTML = "";
+
+    for(var i = 0; i < customers.length; ++i)
+    {
+        if(customers[i].type == 0 && prospectiveCHK.checked || 
+           customers[i].type == 1 && activeCHK.checked ||
+           customers[i].type == 2 && nonActiveCHK.checked)
+        {
+            var d = new Date(customers[i].created * 1000);
+
+            document.getElementById('customersTable').innerHTML += "<tr><td>" + customers[i].name + "</td><td>" +
+                generateCustomerStatusSelect(customers[i].type, customers[i].id, i) + "</td><td>" +
+                d.toLocaleString() + "</td><td><button class='btn btn-primary' onclick='showNotesPage(" + customers[i].id + ",\"" + customers[i].details + "\",\"" + customers[i].name + "\");'>View notes</button></td></tr>";
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function()
+{
+    var crtURL = document.URL;
+    var slashCounter = 0;
+
+	URL = "";
+
+	for(var i = 0; i < crtURL.length; ++i)
+	{
+		if(crtURL.charAt(i) != '/')
+		{
+			URL += crtURL.charAt(i);
+		}
+		else
+		{
+			++slashCounter;
+			if(slashCounter == 3)
+			{
+				break;
+			}
+
+            URL += crtURL.charAt(i);
+		}
+	}
+	URL += ":4080/";
+
+    getCustomers();
+});
+</script>
+</body>
+</html>
