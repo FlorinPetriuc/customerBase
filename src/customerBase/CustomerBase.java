@@ -5,14 +5,68 @@ import java.io.IOException;
 import srv.ServerWrapper;
 
 public class CustomerBase {
+	
+	static String GetParameter(String[] args, String arg) {
+		String ret = null;
+		
+		for (String s : args) {
+			String[] sArr = s.split("=");
+			
+			if(sArr.length != 2) {
+				continue;
+			}
+			
+			if(sArr[0].equals("-" + arg)) {
+				return sArr[1];
+			}
+		}
+		
+		return ret;
+	}
 
 	public static void main(String[] args) {
-		int port = 4080;
+		int port;
 		
-		String dbUser = "propuser";
-		String dbPass = "propuser";
-		String dbURL = "localhost";
-		String db = "propellerhead";
+		String _port;
+		String dbUser;
+		String dbPass;
+		String dbURL;
+		String db;
+		
+		System.out.println("Starting up. Version 1.0.");
+		
+		dbUser = GetParameter(args, "dbuser");
+		if(dbUser == null) {
+			dbUser = "propuser";
+		}
+		
+		dbPass = GetParameter(args, "dbpass");
+		if(dbPass == null) {
+			dbPass = "propuser";
+		}
+		
+		dbURL = GetParameter(args, "dburl");
+		if(dbURL == null) {
+			dbURL = "localhost";
+		}
+		
+		db = GetParameter(args, "db");
+		if(db == null) {
+			db = "propellerhead";
+		}
+		
+		_port = GetParameter(args, "port");
+		if(_port == null) {
+			_port = "4080";
+		}
+		
+		try {
+			port = Integer.parseInt(_port);
+		} catch(NumberFormatException ex) {
+			System.out.println("Port number is NAN");
+			
+			return;
+		}
 		
 		System.setProperty("user.timezone", "GMT");
 		

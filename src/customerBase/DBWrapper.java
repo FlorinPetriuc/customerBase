@@ -30,6 +30,9 @@ public class DBWrapper {
 	}
 	
 	public boolean Connect() {
+		System.out.println("Connecting to db " + db + " at " + url
+							+ " with u:" + username + " and p:" + password);
+		
 		String myDriver = "com.mysql.jdbc.Driver";
 		String myUrl = "jdbc:mysql://" + url + "/" + db;
 		

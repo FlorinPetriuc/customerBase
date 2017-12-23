@@ -24,6 +24,8 @@ public class ServerWrapper {
 	}
 	
 	public boolean Start() {
+		System.out.println("Starting server on port " + port);
+		
 		InetSocketAddress sAddr = new InetSocketAddress(port);
 		
 		try {
