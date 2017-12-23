@@ -1,18 +1,17 @@
 # CustomerBase 1.0
 
-    CustomerBase is an application that allows a company to see their customer information.<br />
-    Customers have the following information associated with them:<br />
-        ● Unique customer identifier.<br />
-        ● Status: one of "prospective", "current" or "non-active".<br />
-        ● Creation date and time.<br />
-        ● General information like name and contact details.<br />
-    The company can also make notes for each customer. A customer can have any number of  notes associated with them.<br />
-    <br />
-    The user is able to:<br />
-        ● Filter and sort the list of customers.<br />
-        ● Click on a customer in the list to view their details and add/edit notes for that customer.<br />
-        ● Change their status.<br />
-    <br />
+    CustomerBase is an application that allows a company to see their customer information.
+    Customers have the following information associated with them:
+        ● Unique customer identifier.
+        ● Status: one of "prospective", "current" or "non-active".
+        ● Creation date and time.
+        ● General information like name and contact details.
+    The company can also make notes for each customer. A customer can have any number of  notes associated with them.
+    
+    The user is able to:
+        ● Filter and sort the list of customers.
+        ● Click on a customer in the list to view their details and add/edit notes for that customer.
+        ● Change their status.
 
 ## Dependencies
 
@@ -30,10 +29,6 @@ The application has 3 components:<br />
         - Uses the backend's REST API.<br />
     ● MySQL.<br />
         - Manages the data on the disk.<br />
-
-## Tests
-
-    To test the stack, run src/test/test.html on the same machine as the backend. The test.html page assumes the backend has been configured to use port 4080.
 
 ## Installation
 
@@ -75,6 +70,10 @@ The application has 3 components:<br />
 
     By default, the frontend will try to connect to the backend on port 4080. If the port is changed modify customerBase.html at line 421.
 
+## Tests
+
+    To test the stack, run src/test/test.html on the same machine as the backend. The test.html page assumes the backend has been configured to use port 4080.
+
 ## Usage
 
-Navigate to IP_ADDRESS/customerBase.html<br />
+Navigate to IP_ADDRESS/customerBase.html
